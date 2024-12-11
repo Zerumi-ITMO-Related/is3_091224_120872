@@ -5,14 +5,18 @@
         <td class="no-table-border">
           <p>IS</p>
         </td>
+        @if((currentUser.roles || []).includes('ADMIN')) {
         <td class="no-table-border">
-          @if((currentUser.roles || []).includes('ADMIN')) {
           <button mat-raised-button (click)="openAdminPanel()" class="margin">
             Admin Panel
           </button>
-          }
         </td>
-        <td class="no-table-border"></td>
+        }
+        <td class="no-table-border">
+          <button mat-raised-button (click)="openImportHistory()" class="margin">
+            Import History
+          </button>
+        </td>
         <td class="no-table-border"></td>
         <td class="no-table-border"></td>
         <td class="no-table-border right-align margin">

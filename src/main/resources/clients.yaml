@@ -1,7 +1,7 @@
 # Models example
 - name: John
   coordinates:
-    x: 10.7
+    x: 324.2
     y: 20.0
   realHero: true
   hasToothpick: false
@@ -14,8 +14,8 @@
 
 - name: Jane
   coordinates:
-    x: 15.0
-    y: 25.0
+    x: 324.2
+    y: 20.0
   realHero: false
   hasToothpick: null
   car:

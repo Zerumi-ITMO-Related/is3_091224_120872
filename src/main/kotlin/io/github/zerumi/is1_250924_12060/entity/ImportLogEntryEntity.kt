@@ -16,5 +16,5 @@ class ImportLogEntryEntity(
     var successful: Boolean,
     var importedModels: Int,
     var timestamp: ZonedDateTime,
-    var filename: String,
+    var filename: String?,
 ) : Serializable

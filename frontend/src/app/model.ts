@@ -49,3 +49,12 @@ export class AdminRequest {
   status!: string;
   comment!: string;
 }
+
+export class ImportLogEntry {
+  id!: number;
+  user!: UserProfile;
+  importedCount!: number;
+  successful!: boolean;
+  timestamp!: string;
+  filename!: string;
+}

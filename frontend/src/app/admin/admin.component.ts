@@ -106,7 +106,7 @@ export class AdminComponent {
     this.dataSource.filter = filterValue.trim().toLowerCase();
   }
 
-  acceptRequest(request: any) {
+  acceptRequest(request: AdminRequest) {
     this.http.put(environment.backendURL + '/api/v1/admin/approve', request).subscribe();
   }
 

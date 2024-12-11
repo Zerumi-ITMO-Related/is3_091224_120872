@@ -4,6 +4,7 @@ import { MainComponent } from './main/main.component';
 import { authenticationGuard } from './authentication.guard';
 import { LoginComponent } from './login/login.component';
 import { AdminComponent } from './admin/admin.component';
+import { ImportHistoryComponent } from './import-history/import-history.component';
 
 export const routes: Routes = [
   {
@@ -25,6 +26,10 @@ export const routes: Routes = [
       {
         path: 'admin',
         component: AdminComponent,
+      },
+      {
+        path: 'import-history',
+        component: ImportHistoryComponent,
       },
       {
         path: '**',

@@ -152,6 +152,10 @@ export class MainComponent implements AfterViewInit {
     this.router.navigate(['admin']);
   }
 
+  openImportHistory() {
+    this.router.navigate(['import-history']);
+  }
+
   onTableContextDelete(item: HumanBeing) {
     this.http
       .delete(environment.backendURL + '/api/v1/model/' + item.id)

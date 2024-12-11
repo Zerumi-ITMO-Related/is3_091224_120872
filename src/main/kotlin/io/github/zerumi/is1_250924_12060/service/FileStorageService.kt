@@ -3,6 +3,7 @@ package io.github.zerumi.is1_250924_12060.service
 import com.jlefebure.spring.boot.minio.MinioService
 import io.github.zerumi.is1_250924_12060.model.FileResponse
 import io.minio.StatObjectResponse
+import jakarta.transaction.Transactional
 import org.springframework.core.io.InputStreamResource
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -13,6 +14,7 @@ import java.nio.file.Path
 class FileStorageService(
     val minioService: MinioService,
 ) {
+    @Transactional
     fun addFile(file: MultipartFile, filename: String): StatObjectResponse {
         val path = Path.of(filename)
         minioService.upload(path, file.inputStream, file.contentType)

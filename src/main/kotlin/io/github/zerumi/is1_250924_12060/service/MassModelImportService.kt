@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.jlefebure.spring.boot.minio.MinioHealthIndicator
 import io.github.zerumi.is1_250924_12060.controller.ModelController
 import io.github.zerumi.is1_250924_12060.dto.HumanBeingDTO
 import io.github.zerumi.is1_250924_12060.dto.HumanBeingFullDTO
@@ -16,6 +17,8 @@ import io.github.zerumi.is1_250924_12060.repository.ModelRepository
 import io.github.zerumi.is1_250924_12060.repository.UserRepository
 import io.github.zerumi.is1_250924_12060.validation.ModelValidator
 import jakarta.transaction.Transactional
+import org.springframework.boot.actuate.health.Health
+import org.springframework.boot.actuate.health.Status
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -31,12 +34,16 @@ class MassModelImportService(
     val importLogRepository: ImportLogRepository,
     val userRepository: UserRepository,
     val userService: UserService,
-    val fileService: FileStorageService
+    val fileService: FileStorageService,
+    val minioHealthIndicator: MinioHealthIndicator,
 ) {
-    @Transactional
+    @Transactional(dontRollbackOn = [IllegalArgumentException::class])
     fun processInput(file: MultipartFile, user: UserModel): List<HumanBeingFullDTO> {
-        val filename = (file.originalFilename ?: "file") + getRandomString(10)
+        val filename = getRandomString(10) + (file.originalFilename ?: "file")
         try {
+            require(prepareDB())
+            require(prepareMinIOStorage())
+
             fileService.addFile(file, filename)
             val dtos = decodeHumanBeingsFromYaml(file.inputStream)
             val entities =
@@ -51,6 +58,9 @@ class MassModelImportService(
             throw e
         }
     }
+
+    fun prepareMinIOStorage(): Boolean = minioHealthIndicator.health().status == Status.UP
+    fun prepareDB(): Boolean = importLogRepository.count() >= 0
 
     fun decodeHumanBeingsFromYaml(inputStream: InputStream): List<HumanBeingDTO> {
         val objectMapper = ObjectMapper(YAMLFactory()).registerModule(
@@ -74,6 +84,7 @@ class MassModelImportService(
         }
     }
 
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     fun writeSuccessfulLog(user: UserModel, count: Int, filename: String) {
         importLogRepository.save(
             ImportLogEntryEntity(
@@ -86,6 +97,7 @@ class MassModelImportService(
         )
     }
 
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     fun writeUnsuccessfulLog(user: UserModel, filename: String) {
         importLogRepository.save(
             ImportLogEntryEntity(
@@ -107,7 +119,7 @@ class MassModelImportService(
         filename = importLogEntryEntity.filename
     )
 
-    fun getRandomString(length: Int) : String {
+    fun getRandomString(length: Int): String {
         val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
         return (1..length)
             .map { allowedChars.random() }
