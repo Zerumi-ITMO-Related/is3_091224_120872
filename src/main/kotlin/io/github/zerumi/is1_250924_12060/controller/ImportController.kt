@@ -47,5 +47,6 @@ class ImportController(
         successful = importLogEntry.successful,
         importedCount = importLogEntry.importedCount,
         timestamp = importLogEntry.timestamp,
+        filename = importLogEntry.filename
     )
 }

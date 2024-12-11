@@ -9,4 +9,5 @@ data class ImportLogEntryDTO(
     val successful: Boolean,
     val importedCount: Int,
     val timestamp: ZonedDateTime,
+    val filename: String,
 ) : Serializable

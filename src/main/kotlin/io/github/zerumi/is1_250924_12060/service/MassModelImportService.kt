@@ -31,20 +31,23 @@ class MassModelImportService(
     val importLogRepository: ImportLogRepository,
     val userRepository: UserRepository,
     val userService: UserService,
+    val fileService: FileStorageService
 ) {
     @Transactional
     fun processInput(file: MultipartFile, user: UserModel): List<HumanBeingFullDTO> {
+        val filename = (file.originalFilename ?: "file") + getRandomString(10)
         try {
+            fileService.addFile(file, filename)
             val dtos = decodeHumanBeingsFromYaml(file.inputStream)
             val entities =
                 dtos.map { modelController.convertToModel(it, user) }.map { modelService.convertToEntity(it) }
             if (modelValidator.validateModel(entities)) {
                 val result = modelRepository.saveAll(entities)
-                writeSuccessfulLog(user, entities.size)
+                writeSuccessfulLog(user, entities.size, filename)
                 return result.map { modelService.convertToModel(it) }.map { modelController.convertToDto(it) }
             } else throw IllegalArgumentException("Unique coordinates count exceeded!")
         } catch (e: Throwable) {
-            writeUnsuccessfulLog(user)
+            writeUnsuccessfulLog(user, filename)
             throw e
         }
     }
@@ -71,24 +74,26 @@ class MassModelImportService(
         }
     }
 
-    fun writeSuccessfulLog(user: UserModel, count: Int) {
+    fun writeSuccessfulLog(user: UserModel, count: Int, filename: String) {
         importLogRepository.save(
             ImportLogEntryEntity(
                 userEntity = userRepository.getReferenceById(user.id),
                 successful = true,
                 importedModels = count,
-                timestamp = ZonedDateTime.now()
+                timestamp = ZonedDateTime.now(),
+                filename = filename
             )
         )
     }
 
-    fun writeUnsuccessfulLog(user: UserModel) {
+    fun writeUnsuccessfulLog(user: UserModel, filename: String) {
         importLogRepository.save(
             ImportLogEntryEntity(
                 userEntity = userRepository.getReferenceById(user.id),
                 successful = false,
                 importedModels = 0,
-                timestamp = ZonedDateTime.now()
+                timestamp = ZonedDateTime.now(),
+                filename = filename
             )
         )
     }
@@ -98,6 +103,14 @@ class MassModelImportService(
         user = userService.convertEntityToModel(importLogEntryEntity.userEntity),
         successful = importLogEntryEntity.successful,
         importedCount = importLogEntryEntity.importedModels,
-        timestamp = importLogEntryEntity.timestamp
+        timestamp = importLogEntryEntity.timestamp,
+        filename = importLogEntryEntity.filename
     )
+
+    fun getRandomString(length: Int) : String {
+        val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+        return (1..length)
+            .map { allowedChars.random() }
+            .joinToString("")
+    }
 }
