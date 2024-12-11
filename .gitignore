@@ -38,4 +38,9 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Minio ###
 /data/
+
+### app.properties with sensetive data ###
+src/main/resources/application.properties
